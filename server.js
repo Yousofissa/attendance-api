@@ -82,6 +82,25 @@ app.post("/students/bulk", async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
+// Enroll many students into one class
+app.post("/enroll/bulk", async (req, res) => {
+  const { class_id, student_ids } = req.body;
+  if (!class_id || !Array.isArray(student_ids) || student_ids.length === 0) {
+    return res.status(400).json({ ok: false, message: "class_id and student_ids[] required" });
+  }
+
+  try {
+    for (const sid of student_ids) {
+      await pool.query(
+        "INSERT INTO enrollments (student_id, class_id) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+        [sid, class_id]
+      );
+    }
+    res.json({ ok: true, message: "Bulk enrolled ✅" });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // Add student
 app.post("/students", async (req, res) => {

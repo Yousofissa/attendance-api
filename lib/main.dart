@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'students_page.dart';
 import 'attendance_page.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -11,7 +13,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Attendance',
+      title: 'Student Attendance',
       theme: ThemeData(useMaterial3: true),
       home: const HomeTabs(),
     );
@@ -28,9 +30,9 @@ class HomeTabs extends StatefulWidget {
 class _HomeTabsState extends State<HomeTabs> {
   int idx = 0;
 
-  final pages = const [
-    StudentsPage(),
-    AttendancePage(),
+  final List<Widget> pages = [
+    const StudentsPage(),
+    const AttendancePage(),
   ];
 
   @override
@@ -41,8 +43,14 @@ class _HomeTabsState extends State<HomeTabs> {
         selectedIndex: idx,
         onDestinationSelected: (v) => setState(() => idx = v),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.people), label: "Students"),
-          NavigationDestination(icon: Icon(Icons.checklist), label: "Attendance"),
+          NavigationDestination(
+            icon: Icon(Icons.people),
+            label: "Students",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.checklist),
+            label: "Attendance",
+          ),
         ],
       ),
     );

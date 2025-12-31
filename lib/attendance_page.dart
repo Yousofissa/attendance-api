@@ -1,101 +1,165 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
 
-void main() => runApp(const MyApp());
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AttendancePage extends StatefulWidget {
+  const AttendancePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Attendance',
-      theme: ThemeData(useMaterial3: true),
-      home: const StudentsPage(),
-    );
-  }
+  State<AttendancePage> createState() => _AttendancePageState();
 }
 
-class StudentsPage extends StatefulWidget {
-  const StudentsPage({super.key});
+class _AttendancePageState extends State<AttendancePage> {
+  final days = const ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  final statuses = const ["Present", "Absent", "Late"];
 
-  @override
-  State<StudentsPage> createState() => _StudentsPageState();
-}
+  String selectedDay = "Monday";
+  int? selectedClassId;
 
-class _StudentsPageState extends State<StudentsPage> {
+  List<dynamic> classes = [];
   List<dynamic> students = [];
-  bool loading = true;
 
-  final nameCtrl = TextEditingController();
-  final codeCtrl = TextEditingController();
+  bool loadingClasses = true;
+  bool loadingStudents = false;
+  bool saving = false;
+
+  final Map<int, String> statusMap = {};
 
   @override
   void initState() {
     super.initState();
-    loadStudents();
+    loadClasses();
   }
 
-  Future<void> loadStudents() async {
-    setState(() => loading = true);
-    students = await Api.getStudents();
-    setState(() => loading = false);
+  Future<void> loadClasses() async {
+    setState(() => loadingClasses = true);
+    classes = await Api.getClasses();
+    if (classes.isNotEmpty) {
+      selectedClassId = classes.first["id"];
+    }
+    setState(() => loadingClasses = false);
+    await loadStudentsAndAttendance();
   }
 
-  Future<void> addStudent() async {
-    final name = nameCtrl.text.trim();
-    final code = codeCtrl.text.trim();
-    if (name.isEmpty || code.isEmpty) return;
+  int _weekdayNumber(String day) {
+    switch (day) {
+      case "Monday":
+        return DateTime.monday;
+      case "Tuesday":
+        return DateTime.tuesday;
+      case "Wednesday":
+        return DateTime.wednesday;
+      case "Thursday":
+        return DateTime.thursday;
+      case "Friday":
+        return DateTime.friday;
+      default:
+        return DateTime.monday;
+    }
+  }
 
-    await Api.addStudent(name, code);
-    nameCtrl.clear();
-    codeCtrl.clear();
-    await loadStudents();
+  String _getDateForDay() {
+    final today = DateTime.now();
+    final target = _weekdayNumber(selectedDay);
+    int diff = target - today.weekday;
+    if (diff < 0) diff += 7;
+    final date = today.add(Duration(days: diff));
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  Future<void> loadStudentsAndAttendance() async {
+    if (selectedClassId == null) return;
+
+    setState(() {
+      loadingStudents = true;
+      students = [];
+      statusMap.clear();
+    });
+
+    final date = _getDateForDay();
+
+    students = await Api.getStudentsByClass(selectedClassId!);
+    final existing =
+    await Api.getAttendanceForClassDate(selectedClassId!, date);
+
+    for (final s in students) {
+      final id = s["id"];
+      statusMap[id] = existing[id] ?? "Absent";
+    }
+
+    setState(() => loadingStudents = false);
+  }
+
+  Future<void> saveAttendance() async {
+    if (selectedClassId == null) return;
+
+    setState(() => saving = true);
+
+    final date = _getDateForDay();
+
+    final items = students
+        .map((s) => {
+      "student_id": s["id"],
+      "status": statusMap[s["id"]] ?? "Absent",
+    })
+        .toList();
+
+    await Api.saveAttendanceBulk(selectedClassId!, date, items);
+
+    setState(() => saving = false);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Attendance saved ✅")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Students")),
+      appBar: AppBar(title: const Text("Attendance")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(
-              controller: nameCtrl,
+            DropdownButtonFormField<String>(
+              value: selectedDay,
               decoration: const InputDecoration(
-                labelText: "Full name",
+                labelText: "Select Day",
                 border: OutlineInputBorder(),
               ),
+              items: days
+                  .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                  .toList(),
+              onChanged: (v) async {
+                if (v == null) return;
+                setState(() => selectedDay = v);
+                await loadStudentsAndAttendance();
+              },
             ),
             const SizedBox(height: 10),
-            TextField(
-              controller: codeCtrl,
+            loadingClasses
+                ? const LinearProgressIndicator()
+                : DropdownButtonFormField<int>(
+              value: selectedClassId,
               decoration: const InputDecoration(
-                labelText: "Student code",
+                labelText: "Select Class",
                 border: OutlineInputBorder(),
               ),
+              items: classes
+                  .map((c) => DropdownMenuItem<int>(
+                value: c["id"],
+                child: Text(c["class_name"]),
+              ))
+                  .toList(),
+              onChanged: (v) async {
+                if (v == null) return;
+                setState(() => selectedClassId = v);
+                await loadStudentsAndAttendance();
+              },
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: addStudent,
-                child: const Text("Add Student"),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                const Text("Students List", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                const Spacer(),
-                IconButton(onPressed: loadStudents, icon: const Icon(Icons.refresh)),
-              ],
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Expanded(
-              child: loading
+              child: loadingStudents
                   ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
                 itemCount: students.length,
@@ -103,14 +167,33 @@ class _StudentsPageState extends State<StudentsPage> {
                   final s = students[i];
                   return Card(
                     child: ListTile(
-                      title: Text(s["full_name"] ?? ""),
+                      title: Text(s["full_name"]),
                       subtitle: Text("Code: ${s["student_code"]}"),
-                      trailing: Text("ID: ${s["id"]}"),
+                      trailing: DropdownButton<String>(
+                        value: statusMap[s["id"]],
+                        items: statuses
+                            .map((st) => DropdownMenuItem(
+                          value: st,
+                          child: Text(st),
+                        ))
+                            .toList(),
+                        onChanged: (v) =>
+                            setState(() => statusMap[s["id"]] = v!),
+                      ),
                     ),
                   );
                 },
               ),
             ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: saving ? null : saveAttendance,
+                child: saving
+                    ? const CircularProgressIndicator()
+                    : const Text("Save Attendance"),
+              ),
+            )
           ],
         ),
       ),

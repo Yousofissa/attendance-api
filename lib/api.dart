@@ -5,6 +5,7 @@ class Api {
   static const String baseUrl =
       "https://attendance-api-production-de0c.up.railway.app";
 
+  // ---------- Students ----------
   static Future<List<dynamic>> getStudents() async {
     final res = await http.get(Uri.parse("$baseUrl/students"));
     final data = jsonDecode(res.body);
@@ -19,21 +20,52 @@ class Api {
     );
   }
 
-  static Future<void> markAttendance(int studentId, String date, String status) async {
+  // ---------- Classes ----------
+  static Future<List<dynamic>> getClasses() async {
+    final res = await http.get(Uri.parse("$baseUrl/classes"));
+    final data = jsonDecode(res.body);
+    return data["classes"] ?? [];
+  }
+
+  static Future<void> addClass(String className) async {
     await http.post(
-      Uri.parse("$baseUrl/attendance"),
+      Uri.parse("$baseUrl/classes"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "student_id": studentId,
-        "date": date,
-        "status": status,
-      }),
+      body: jsonEncode({"class_name": className}),
     );
   }
 
-  static Future<List<dynamic>> getAttendanceByDate(String date) async {
-    final res = await http.get(Uri.parse("$baseUrl/attendance?date=$date"));
+  static Future<List<dynamic>> getStudentsByClass(int classId) async {
+    final res = await http.get(Uri.parse("$baseUrl/classes/$classId/students"));
     final data = jsonDecode(res.body);
-    return data["records"] ?? [];
+    return data["students"] ?? [];
+  }
+
+  // ---------- Attendance ----------
+  static Future<Map<int, String>> getAttendanceForClassDate(
+      int classId, String date) async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/attendance/class?class_id=$classId&date=$date"),
+    );
+    final data = jsonDecode(res.body);
+    final records = (data["records"] ?? []) as List<dynamic>;
+    final map = <int, String>{};
+    for (final r in records) {
+      map[r["student_id"]] = r["status"];
+    }
+    return map;
+  }
+
+  static Future<void> saveAttendanceBulk(
+      int classId, String date, List<Map<String, dynamic>> items) async {
+    await http.post(
+      Uri.parse("$baseUrl/attendance/bulk"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "class_id": classId,
+        "date": date,
+        "items": items,
+      }),
+    );
   }
 }

@@ -53,6 +53,35 @@ app.post("/setup", async (req, res) => {
   }
 });
 
+// Add students in bulk
+app.post("/students/bulk", async (req, res) => {
+  const { students } = req.body;
+
+  if (!Array.isArray(students) || students.length === 0) {
+    return res.status(400).json({ ok: false, message: "students array required" });
+  }
+
+  try {
+    const inserted = [];
+
+    for (const s of students) {
+      if (!s.full_name || !s.student_code) continue;
+
+      const result = await pool.query(
+        "INSERT INTO students (full_name, student_code) VALUES ($1,$2) ON CONFLICT DO NOTHING RETURNING *",
+        [s.full_name, s.student_code]
+      );
+
+      if (result.rows.length > 0) {
+        inserted.push(result.rows[0]);
+      }
+    }
+
+    res.json({ ok: true, inserted });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // Add student
 app.post("/students", async (req, res) => {

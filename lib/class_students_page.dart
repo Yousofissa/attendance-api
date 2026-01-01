@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
 
-class StudentsPage extends StatefulWidget {
-  const StudentsPage({super.key});
+class ClassStudentsPage extends StatefulWidget {
+  final int classId;
+  final String className;
+
+  const ClassStudentsPage({
+    super.key,
+    required this.classId,
+    required this.className,
+  });
 
   @override
-  State<StudentsPage> createState() => _StudentsPageState();
+  State<ClassStudentsPage> createState() => _ClassStudentsPageState();
 }
 
-class _StudentsPageState extends State<StudentsPage> {
+class _ClassStudentsPageState extends State<ClassStudentsPage> {
   List<dynamic> students = [];
   bool loading = true;
 
@@ -20,7 +27,7 @@ class _StudentsPageState extends State<StudentsPage> {
 
   Future<void> loadStudents() async {
     setState(() => loading = true);
-    students = await Api.getStudents();
+    students = await Api.getStudentsByClass(widget.classId);
     setState(() => loading = false);
   }
 
@@ -28,18 +35,15 @@ class _StudentsPageState extends State<StudentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Students"),
+        title: Text(widget.className),
         actions: [
-          IconButton(
-            onPressed: loadStudents,
-            icon: const Icon(Icons.refresh),
-          ),
+          IconButton(onPressed: loadStudents, icon: const Icon(Icons.refresh)),
         ],
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : students.isEmpty
-          ? const Center(child: Text("No students found"))
+          ? const Center(child: Text("No students enrolled in this class"))
           : ListView.builder(
         padding: const EdgeInsets.all(12),
         itemCount: students.length,
@@ -47,11 +51,9 @@ class _StudentsPageState extends State<StudentsPage> {
           final s = students[i];
           return Card(
             child: ListTile(
-              leading: CircleAvatar(
-                child: Text("${s["id"]}"),
-              ),
               title: Text(s["full_name"] ?? ""),
-              subtitle: Text("Code: ${s["student_code"] ?? ""}"),
+              subtitle: Text("Student Code: ${s["student_code"] ?? ""}"),
+              trailing: Text("ID: ${s["id"]}"),
             ),
           );
         },

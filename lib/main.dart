@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'students_page.dart';
+import 'classes_page.dart';
 import 'attendance_page.dart';
 
 void main() {
@@ -31,7 +31,7 @@ class _HomeTabsState extends State<HomeTabs> {
   int idx = 0;
 
   final List<Widget> pages = [
-    const StudentsPage(),
+    const ClassesPage(),
     const AttendancePage(),
   ];
 
@@ -44,8 +44,8 @@ class _HomeTabsState extends State<HomeTabs> {
         onDestinationSelected: (v) => setState(() => idx = v),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.people),
-            label: "Students",
+            icon: Icon(Icons.class_),
+            label: "Classes",
           ),
           NavigationDestination(
             icon: Icon(Icons.checklist),

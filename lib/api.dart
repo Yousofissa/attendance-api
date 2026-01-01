@@ -42,8 +42,8 @@ class Api {
   }
 
   // ---------- Attendance ----------
-  static Future<Map<int, String>> getAttendanceForClassDate(
-      int classId, String date) async {
+  static Future<Map<int, String>> getAttendanceForClassDate(int classId,
+      String date) async {
     final res = await http.get(
       Uri.parse("$baseUrl/attendance/class?class_id=$classId&date=$date"),
     );
@@ -56,9 +56,10 @@ class Api {
     return map;
   }
 
-  static Future<void> saveAttendanceBulk(
-      int classId, String date, List<Map<String, dynamic>> items) async {
-    await http.post(
+  static Future<void> saveAttendanceBulk(int classId,
+      String date,
+      List<Map<String, dynamic>> items,) async {
+    final res = await http.post(
       Uri.parse("$baseUrl/attendance/bulk"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
@@ -67,5 +68,9 @@ class Api {
         "items": items,
       }),
     );
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception("HTTP ${res.statusCode}: ${res.body}");
+    }
   }
 }

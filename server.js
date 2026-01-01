@@ -1,4 +1,4 @@
-// server.js (UPDATED - COPY/PASTE FULL FILE)
+
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -12,7 +12,7 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
 });
 
-// ---------- helpers ----------
+
 const normalizeStatus = (s) => {
   if (!s) return null;
   const x = String(s).trim().toLowerCase();
@@ -25,17 +25,17 @@ const normalizeStatus = (s) => {
 const parseISODate = (d) => {
   if (!d) return null;
   const s = String(d).trim();
-  // Expect YYYY-MM-DD
+
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
   return s;
 };
 
-// ---------- routes ----------
+
 app.get("/", (req, res) => {
   res.json({ ok: true, message: "Student Attendance API is running" });
 });
 
-// Debug: check DB + quick counts
+
 app.get("/debug", async (req, res) => {
   try {
     const db = await pool.query(`SELECT current_database() AS db;`);
@@ -52,7 +52,7 @@ app.get("/debug", async (req, res) => {
   }
 });
 
-// Setup tables (safe)
+
 app.post("/setup", async (req, res) => {
   try {
     await pool.query(`
@@ -89,7 +89,7 @@ app.post("/setup", async (req, res) => {
   }
 });
 
-// Create/Reset attendance table ONLY (use once if schema mismatched)
+
 app.post("/reset/attendance", async (req, res) => {
   try {
     await pool.query(`
@@ -110,7 +110,7 @@ app.post("/reset/attendance", async (req, res) => {
   }
 });
 
-// Add ONE student
+
 app.post("/students", async (req, res) => {
   const { full_name, student_code } = req.body;
   if (!full_name || !student_code) {
@@ -128,7 +128,7 @@ app.post("/students", async (req, res) => {
   }
 });
 
-// Add students in bulk
+
 app.post("/students/bulk", async (req, res) => {
   const { students } = req.body;
 
@@ -161,7 +161,7 @@ app.post("/students/bulk", async (req, res) => {
   }
 });
 
-// List students
+
 app.get("/students", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM students ORDER BY id ASC");
@@ -171,7 +171,7 @@ app.get("/students", async (req, res) => {
   }
 });
 
-// Create class
+
 app.post("/classes", async (req, res) => {
   const { class_name } = req.body;
   if (!class_name) return res.status(400).json({ ok: false, message: "Missing class_name" });
@@ -187,7 +187,7 @@ app.post("/classes", async (req, res) => {
   }
 });
 
-// List classes
+
 app.get("/classes", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM classes ORDER BY class_name ASC");
@@ -197,7 +197,7 @@ app.get("/classes", async (req, res) => {
   }
 });
 
-// Enroll ONE (expects DB student id)
+
 app.post("/enroll", async (req, res) => {
   const { student_id, class_id } = req.body;
   if (!student_id || !class_id) return res.status(400).json({ ok: false, message: "Missing fields" });
@@ -213,7 +213,6 @@ app.post("/enroll", async (req, res) => {
   }
 });
 
-// Enroll MANY (expects DB student ids)
 app.post("/enroll/bulk", async (req, res) => {
   const { class_id, student_ids } = req.body;
   if (!class_id || !Array.isArray(student_ids) || student_ids.length === 0) {
@@ -237,7 +236,7 @@ app.post("/enroll/bulk", async (req, res) => {
   }
 });
 
-// Get students for a class
+
 app.get("/classes/:id/students", async (req, res) => {
   const classId = req.params.id;
   try {
@@ -257,7 +256,7 @@ app.get("/classes/:id/students", async (req, res) => {
   }
 });
 
-// Mark ONE attendance (expects DB student id)
+
 app.post("/attendance", async (req, res) => {
   const { student_id, class_id, date, status } = req.body;
 
@@ -289,7 +288,7 @@ app.post("/attendance", async (req, res) => {
   }
 });
 
-// Save attendance BULK (expects DB student ids)
+
 app.post("/attendance/bulk", async (req, res) => {
   const { class_id, date, items } = req.body;
 
@@ -302,14 +301,14 @@ app.post("/attendance/bulk", async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    // Ensure class exists
+
     const cls = await client.query("SELECT id FROM classes WHERE id = $1", [class_id]);
     if (cls.rowCount === 0) {
       await client.query("ROLLBACK");
       return res.status(400).json({ ok: false, message: "class_id not found in classes table" });
     }
 
-    // Validate students exist (DB ids!)
+
     const studentIds = items.map((x) => x.student_id).filter(Boolean);
     const existing = await client.query(
       `SELECT id FROM students WHERE id = ANY($1::int[])`,
@@ -356,7 +355,7 @@ app.post("/attendance/bulk", async (req, res) => {
   }
 });
 
-// Get attendance for class+date
+
 app.get("/attendance/class", async (req, res) => {
   const { class_id, date } = req.query;
   const iso = parseISODate(date);
@@ -379,7 +378,7 @@ app.get("/attendance/class", async (req, res) => {
   }
 });
 
-// Get attendance by date (all classes)
+
 app.get("/attendance", async (req, res) => {
   const { date } = req.query;
   const iso = parseISODate(date);

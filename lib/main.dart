@@ -30,28 +30,55 @@ class HomeTabs extends StatefulWidget {
 class _HomeTabsState extends State<HomeTabs> {
   int idx = 0;
 
-  final List<Widget> pages = [
-    const ClassesPage(),
-    const AttendancePage(),
+  final List<Widget> pages = const [
+    ClassesPage(),
+    AttendancePage(),
+  ];
+
+  final List<Color> tabColors = const [
+    Color(0xFF7E57C2), // purple for Classes
+    Color(0xFF26A69A), // teal for Attendance
   ];
 
   @override
   Widget build(BuildContext context) {
+    final selectedColor = tabColors[idx];
+
     return Scaffold(
       body: pages[idx],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: idx,
-        onDestinationSelected: (v) => setState(() => idx = v),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.class_),
-            label: "Classes",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.checklist),
-            label: "Attendance",
-          ),
-        ],
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          indicatorColor: selectedColor.withOpacity(0.25), // colored pill behind selected icon
+          labelTextStyle: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return TextStyle(
+                color: selectedColor,
+                fontWeight: FontWeight.w700,
+              );
+            }
+            return const TextStyle(color: Colors.black54);
+          }),
+          iconTheme: MaterialStateProperty.resolveWith((states) {
+            if (states.contains(MaterialState.selected)) {
+              return IconThemeData(color: selectedColor);
+            }
+            return const IconThemeData(color: Colors.black45);
+          }),
+        ),
+        child: NavigationBar(
+          selectedIndex: idx,
+          onDestinationSelected: (v) => setState(() => idx = v),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.class_),
+              label: "Classes",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.checklist),
+              label: "Attendance",
+            ),
+          ],
+        ),
       ),
     );
   }

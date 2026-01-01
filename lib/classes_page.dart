@@ -13,6 +13,15 @@ class _ClassesPageState extends State<ClassesPage> {
   List<dynamic> classes = [];
   bool loading = true;
 
+  final List<Color> cardColors = const [
+    Color(0xFFB3E5FC), // light blue
+    Color(0xFFC8E6C9), // light green
+    Color(0xFFFFF9C4), // light yellow
+    Color(0xFFFFCCBC), // light orange
+    Color(0xFFD1C4E9), // light purple
+    Color(0xFFFFCDD2), // light red/pink
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -31,74 +40,90 @@ class _ClassesPageState extends State<ClassesPage> {
       appBar: AppBar(
         title: const Text("Classes"),
         actions: [
-          IconButton(onPressed: loadClasses, icon: const Icon(Icons.refresh)),
+          IconButton(
+            onPressed: loadClasses,
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : classes.isEmpty
           ? const Center(child: Text("No classes found"))
-          : Padding(
-        padding: const EdgeInsets.all(14),
-        child: GridView.builder(
-          itemCount: classes.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2, // 2 columns = 6 boxes looks nice
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.2,
+          : SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            14,
+            14,
+            14,
+            14 + MediaQuery.of(context).padding.bottom + 70,
           ),
-          itemBuilder: (context, i) {
-            final c = classes[i];
-            return InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ClassStudentsPage(
-                      classId: c["id"],
-                      className: c["class_name"] ?? "Class",
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: classes.length,
+            gridDelegate:
+            const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 2.1,
+            ),
+            itemBuilder: (context, i) {
+              final c = classes[i];
+              final color = cardColors[i % cardColors.length];
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ClassStudentsPage(
+                        classId: c["id"],
+                        className: c["class_name"] ?? "Class",
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 10),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.school, size: 20),
+                          const SizedBox(height: 6),
+                          Text(
+                            c["class_name"] ?? "",
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                );
-              },
-              child: Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.school, size: 34),
-                        const SizedBox(height: 10),
-                        Text(
-                          c["class_name"] ?? "",
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          "ID: ${c["id"]}",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

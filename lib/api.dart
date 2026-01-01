@@ -5,7 +5,7 @@ class Api {
   static const String baseUrl =
       "https://attendance-api-production-de0c.up.railway.app";
 
-  // ---------- Students ----------
+
   static Future<List<dynamic>> getStudents() async {
     final res = await http.get(Uri.parse("$baseUrl/students"));
     final data = jsonDecode(res.body);
@@ -20,7 +20,7 @@ class Api {
     );
   }
 
-  // ---------- Classes ----------
+
   static Future<List<dynamic>> getClasses() async {
     final res = await http.get(Uri.parse("$baseUrl/classes"));
     final data = jsonDecode(res.body);
@@ -41,7 +41,7 @@ class Api {
     return data["students"] ?? [];
   }
 
-  // ---------- Attendance ----------
+
   static Future<Map<int, String>> getAttendanceForClassDate(int classId,
       String date) async {
     final res = await http.get(

@@ -14,12 +14,12 @@ class _ClassesPageState extends State<ClassesPage> {
   bool loading = true;
 
   final List<Color> cardColors = const [
-    Color(0xFFB3E5FC), // light blue
-    Color(0xFFC8E6C9), // light green
-    Color(0xFFFFF9C4), // light yellow
-    Color(0xFFFFCCBC), // light orange
-    Color(0xFFD1C4E9), // light purple
-    Color(0xFFFFCDD2), // light red/pink
+    Color(0xFFB3E5FC),
+    Color(0xFFC8E6C9),
+    Color(0xFFFFF9C4),
+    Color(0xFFFFCCBC),
+    Color(0xFFD1C4E9),
+    Color(0xFFFFCDD2),
   ];
 
   @override

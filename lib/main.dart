@@ -36,8 +36,8 @@ class _HomeTabsState extends State<HomeTabs> {
   ];
 
   final List<Color> tabColors = const [
-    Color(0xFF7E57C2), // purple for Classes
-    Color(0xFF26A69A), // teal for Attendance
+    Color(0xFF7E57C2),
+    Color(0xFF26A69A),
   ];
 
   @override
@@ -48,7 +48,7 @@ class _HomeTabsState extends State<HomeTabs> {
       body: pages[idx],
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
-          indicatorColor: selectedColor.withOpacity(0.25), // colored pill behind selected icon
+          indicatorColor: selectedColor.withOpacity(0.25),
           labelTextStyle: MaterialStateProperty.resolveWith((states) {
             if (states.contains(MaterialState.selected)) {
               return TextStyle(
